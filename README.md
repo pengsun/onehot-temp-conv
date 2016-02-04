@@ -54,8 +54,7 @@ The parameters are the following:
   * `kW`: The kernel width of the convolution, `kW <= nInputFrame` required.
 See the example below for the NLP alias of these terms. 
 
-Example:
-
+Example 1:
 ```Lua
   require'onehot-temp-conv'
   
@@ -72,6 +71,33 @@ Example:
   
   -- the 1d conv module
   tf = nn.OneHotTemporalConvolution(V, C, kW)
+  
+  -- outputs: the dense tensor. size: B, M-kW+1, C
+  outputs = tf:forward(inputs)
+
+  -- back prop: the gradients w.r.t. parameters
+  gradOutputs = outputs:clone():normal()
+  tf:backward(inputs, gradOutputs)
+```
+
+Example 2 (gpu):
+```Lua
+  require'cunn'
+  require'onehot-temp-conv'
+  
+  B = 200 -- batch size
+  M = 45 -- sequence length (#words)
+  V = 12333 -- inputFrameSize (vocabulary size)
+  C = 300 -- outputFrameSize (#output feature maps, or embedding size)
+  kW = 5 -- convolution kernel size (width)
+  
+  -- inputs: the one-hot vector as index in set {1,2,...,V}. size: B, M
+  inputs = torch.LongTensor(B, M):apply(
+    function (e) return math.random(1,V) end
+  ):cuda()
+  
+  -- the 1d conv module
+  tf = nn.OneHotTemporalConvolution(V, C, kW):cuda()
   
   -- outputs: the dense tensor. size: B, M-kW+1, C
   outputs = tf:forward(inputs)
