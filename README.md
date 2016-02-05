@@ -1,9 +1,9 @@
 ## One-Hot Temporal Convolution as Torch's nn module
 
-Implement the sparse(one-hot input) 1-dimensional (temporal) convolution defined in [1, 2]. 
-For NLP task, it directly takes as input the one-hot word vector and do the convolution.
+Implement the sparse (one-hot input) 1-dimensional (temporal) convolution defined in [1, 2]. 
+For NLP task, it applies the convolution over the one-hot word vector directly that the word embedding can be ommited, as shwon in [1, 2].
 Only support the "Narrow Convolution", i.e., the sequence size is reduced after "forward".
-Stride is not allowed.
+Convolution stride must be 1.
 
 Interfaces, terms and tensor size layout are consistent with `nn.TemporalConvolution`.
 
