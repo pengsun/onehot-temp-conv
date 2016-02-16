@@ -104,7 +104,10 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
         )
 
         -- do the copying: this(idx1, :) = that(idx2, :)
-        weigthThis:indexCopy(1, vocabIdxThis, weightThat:index(1, vocabIdxThat) )
+        local thisType = weigthThis:type()
+        weigthThis:indexCopy(1, vocabIdxThis,
+            weightThat:type(thisType):index(1, vocabIdxThat)
+        )
     end
 
 end
