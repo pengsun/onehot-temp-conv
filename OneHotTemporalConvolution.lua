@@ -81,7 +81,11 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
 
     -- p = kernel size = region size = #LookupTable
     local function check_kernelsize()
-        local p -- TODO
+        local p = self:get(1):size() -- #Sub modules = #LookupTable
+        local pp = convThat:get(1):size()
+        assert(p == pp,
+            "inconsistent region size: this = " .. p .. ", that = " .. pp
+        )
         return p
     end
     local p = check_kernelsize()
