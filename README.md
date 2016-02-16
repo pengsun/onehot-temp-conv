@@ -31,6 +31,8 @@ After installation, running `require'onehot-temp-conv'` will add to the `nn` nam
 Derived from `nn.Narrow`, but it doesn't change `gradInput` during back-propagation. An auxiliary class.
 
 ## OneHotTemporalConvolution ##
+
+Constructor:
 ```lua
 module = nn.OneHotTemporalConvolution(inputFrameSize, outputFrameSize, kW)
 ```
@@ -105,6 +107,24 @@ Example 2 (gpu):
   -- back prop: the gradients w.r.t. parameters
   gradOutputs = outputs:clone():normal()
   tf:backward(inputs, gradOutputs)
+```
+
+Method:
+```lua
+OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
+```
+Copy the weight from another `OneHotTemporalConvolution` with the respective vocabulary index. 
+`vocabIdxThis`, `vocabIdxThat` must be `torch.LongTensor`.
+`convThat` must be also a `OneHotTemporalConvolution`.
+Suppose the weight size
+```
+this: V1, C, p
+that: V2, C, p
+```
+where the vocabulary size `V1` and `V2` can be different (but the outputFeatureMap `C` and region size `p` must be the same).
+Then calling the method would in effect do the copying
+```Matlab
+this(vocabIdxThis, :, :) = that(vocabIdxThat, :, :)
 ```
 
 ###Reference

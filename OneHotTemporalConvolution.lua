@@ -72,6 +72,39 @@ function OneHotTemporalConvolution:__tostring__()
     return s .. ')'
 end
 
+function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
+    assert(type(convThat) == type(self),
+        "arg convThat is an unexpected type " .. type(convThat) .. ", expected " .. type(self)
+    )
+    assert(torch.type(vocabIdxThis) == 'torch.LongTensor')
+    assert(torch.type(vocabIdxThat) == 'torch.LongTensor')
+
+    -- p = kernel size = region size = #LookupTable
+    local function check_kernelsize()
+        local p -- TODO
+        return p
+    end
+    local p = check_kernelsize()
+
+    for i = 1, p do
+        -- ConcatTable, Sequential, LookupTable
+        local weigthThis = self:get(1):get(i):get(2).weight
+        local weightThat = convThat:get(1):get(i):get(2).weight
+
+        -- weight sizes:
+        --   V1, C
+        --   V2, C
+        local CThis, CThat = weigthThis:size(2), weightThat:size(2)
+        assert(CThis == CThat,
+            "inconsisten outputFrameSize/featureMaps: this " .. CThis, ", that ", CThat
+        )
+
+        -- do the copying: this(idx1, :) = that(idx2, :)
+        weigthThis:indexCopy(1, vocabIdxThis, weightThat:index(1, vocabIdxThat) )
+    end
+
+end
+
 --- helpers
 function OneHotTemporalConvolution:reset_seq_length(M)
     local contable = self.modules[1]
