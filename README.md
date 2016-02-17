@@ -127,6 +127,39 @@ Then calling the method would in effect do the copying
 this(vocabIdxThis, :, :) = that(vocabIdxThat, :, :)
 ```
 
+## OneHotTemporalConvolutionNoBP ##
+Constructor:
+```lua
+module = nn.OneHotTemporalConvolutionNoBP(ohConv)
+```
+
+Derived from `nn.Module`.
+Initialize from a (pre-trained) `nn.OneHotTemporalConvolution`.
+Only do forward propagation.
+Back propagation will not affect its parameters.
+This module should work as a "feature extractor".
+
+Example:
+```lua
+  require'nn'
+  
+  V, C, p = 33, 10, 2
+  
+  ohConv = nn.OneHotTemporalConvolution(V, C, p)
+  fetext = nn.OneHotTemporalConvolutionNoBP(ohConv:float())
+  
+  -- fprop
+  B, M = 12, 5
+  inputs = torch.LongTensor(B, M):apply(
+      function (e) return math.random(1,V) end
+  ):float()
+  outputs = fetext:forward(inputs)
+  
+  -- cannot get the parameters
+  params, grad = fetext:getParameters()
+  assert(params:numel()==0 and grad:numel()==0)
+```
+
 ###Reference
 [1] Rie Johnson and Tong Zhang. Effective use of word order for text categorization with convolutional neural networks. NAACL-HLT 2015. 
 

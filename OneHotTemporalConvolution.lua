@@ -73,7 +73,7 @@ function OneHotTemporalConvolution:__tostring__()
 end
 
 function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
-    assert(type(convThat) == type(self),
+    assert(torch.type(convThat) == torch.type(self),
         "arg convThat is an unexpected type " .. type(convThat) .. ", expected " .. type(self)
     )
     assert(torch.type(vocabIdxThis) == 'torch.LongTensor')
