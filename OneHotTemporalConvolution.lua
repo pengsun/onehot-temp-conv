@@ -79,10 +79,14 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
     assert(torch.type(vocabIdxThis) == 'torch.LongTensor')
     assert(torch.type(vocabIdxThat) == 'torch.LongTensor')
 
+    -- ref vars of this, that wieghts
+    local weightConvThis = self:parameters()
+    local weightConvThat = convThat:parameters()
+
+
     -- p = kernel size = region size = #LookupTable
     local function check_kernelsize()
-        local p = self:get(1):size() -- #Sub modules = #LookupTable
-        local pp = convThat:get(1):size()
+        local p, pp = #weightConvThis, #weightConvThat
         assert(p == pp,
             "inconsistent region size: this = " .. p .. ", that = " .. pp
         )
@@ -91,9 +95,8 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
     local p = check_kernelsize()
 
     for i = 1, p do
-        -- ConcatTable, Sequential, LookupTable
-        local weigthThis = self:get(1):get(i):get(2).weight
-        local weightThat = convThat:get(1):get(i):get(2).weight
+        local weigthThis = weightConvThis[i]
+        local weightThat = weightConvThat[i]
 
         -- weight sizes:
         --   V1, C
