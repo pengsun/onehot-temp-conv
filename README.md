@@ -172,6 +172,13 @@ Example:
   
   -- size should be B x M x V
   print(gradInputs:size())
+  
+  -- disable the gradInput
+  tf:should_updateGradInput(false)
+  
+  -- should be null
+  gradInputs2 = tf:backward(inputs, gradOutputs)
+  print(gradInputs2)
 ```
 
 #### A note
@@ -193,6 +200,7 @@ This module should work as a "feature extractor".
 Example:
 ```lua
   require'nn'
+  require'onehot-temp-conv'
   
   V, C, p = 33, 10, 2
   
