@@ -7,6 +7,7 @@ local LookupTableExt, parent = torch.class('nn.LookupTableExt', 'nn.LookupTable'
 
 -- class def
 function LookupTableExt:__init(...)
+    --TODO: check arg, only support (V, C)
     parent.__init(self, ...)
     self.flagUpdateGradInput = false
 end

@@ -12,7 +12,7 @@
 require'torch'
 require'nn'
 
---- classdef: One-Hot Temporal Convolution
+-- classdef: One-Hot Temporal Convolution
 local OneHotTemporalConvolution, parent = torch.class('nn.OneHotTemporalConvolution', 'nn.Sequential')
 
 function OneHotTemporalConvolution:__init(V, C, kW)
@@ -33,9 +33,9 @@ function OneHotTemporalConvolution:__init(V, C, kW)
         local length = 1 -- set it as (M - kW + 1) at runtime
         submds[i] = nn.Sequential()
             -- B, M (,V)
-            :add(nn.NarrowNoBP(2,offset,length))
+            :add(nn.NarrowExt(2,offset,length))
             -- B, M-kW+1 (,V)
-            :add(nn.LookupTable(V,C))
+            :add(nn.LookupTableExt(V,C))
             -- B, M-kW+1, C
     end
 
@@ -55,16 +55,18 @@ end
 
 function OneHotTemporalConvolution:updateOutput(input)
     assert(input:dim()==2, "input size must be dim 2: B, M")
+
+    -- need to the seq length for current input batch
     local M = input:size(2)
     assert(M >= self.kW,
         ("kernel size %d > seq length %d, failed"):format(self.kW, M)
     )
-    self:reset_seq_length(M)
+    self:_reset_seq_length(M)
 
     return parent.updateOutput(self, input)
 end
 
--- Okay with default OnehotTemporalConv:backward, which calls each module's backward()
+-- Okay with default backward(), which calls each module's backward()
 
 function OneHotTemporalConvolution:__tostring__()
     local s = string.format('%s(%d -> %d, %d',
@@ -72,7 +74,22 @@ function OneHotTemporalConvolution:__tostring__()
     return s .. ')'
 end
 
---- additional methods
+-- additional methods
+function OneHotTemporalConvolution:should_updateGradInput(flag)
+    assert(flag==true or flag==false, "flag must be boolean!")
+
+    -- set each submoule
+    local function set_each_flag(mods)
+        for _, md in ipairs(mods) do
+            md:should_updateGradInput(flag)
+        end
+    end
+    local ms = self:findModules('nn.NarrowExt')
+    local mms = self:findModules('nn.LookupTableExt')
+    set_each_flag(ms)
+    set_each_flag(mms)
+end
+
 function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
     assert(torch.type(convThat) == torch.type(self),
         "arg convThat is an unexpected type " .. type(convThat) .. ", expected " .. type(self)
@@ -115,8 +132,8 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
 
 end
 
---- helpers
-function OneHotTemporalConvolution:reset_seq_length(M)
+-- helpers
+function OneHotTemporalConvolution:_reset_seq_length(M)
     local contable = self.modules[1]
     local kW = #contable.modules
     for i = 1, kW do
