@@ -1,5 +1,6 @@
 --- nn.NarrowExt
--- extend nn.Narrow in that the updateGradInput can be turned off during bp
+-- extend nn.Narrow in that
+--   * the updateGradInput() can be turned off during bp()
 
 local NarrowExt, parent = torch.class('nn.NarrowExt', 'nn.Narrow')
 
