@@ -1,5 +1,7 @@
 require'nn'
 
-include('NarrowNoBP.lua')
+include('OneHotNarrowExt.lua')
+include('LookupTableExt.lua')
+
 include('OneHotTemporalConvolution.lua')
 include('OneHotTemporalConvolutionDummyBP.lua')

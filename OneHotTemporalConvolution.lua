@@ -33,7 +33,7 @@ function OneHotTemporalConvolution:__init(V, C, kW)
         local length = 1 -- set it as (M - kW + 1) at runtime
         submds[i] = nn.Sequential()
             -- B, M (,V)
-            :add(nn.NarrowExt(2,offset,length))
+            :add(nn.OneHotNarrowExt(V, 2,offset,length))
             -- B, M-kW+1 (,V)
             :add(nn.LookupTableExt(V,C))
             -- B, M-kW+1, C
@@ -84,7 +84,7 @@ function OneHotTemporalConvolution:should_updateGradInput(flag)
             md:should_updateGradInput(flag)
         end
     end
-    local ms = self:findModules('nn.NarrowExt')
+    local ms = self:findModules('nn.OneHotNarrowExt')
     local mms = self:findModules('nn.LookupTableExt')
     set_each_flag(ms)
     set_each_flag(mms)

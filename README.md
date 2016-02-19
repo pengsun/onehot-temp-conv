@@ -4,14 +4,22 @@ Implement the sparse (one-hot input) 1-dimensional (temporal) convolution define
 For NLP task, it applies the convolution over the one-hot word vector directly that the word embedding can be ommited, as shwon in [1, 2].
 Only support the "Narrow Convolution", i.e., the sequence size is reduced after "forward".
 Convolution stride must be 1.
-
-Interfaces, terms and tensor size layout are consistent with `nn.TemporalConvolution`.
-
 The exposed module is essentially a wrapper depending on `nn.LookupTable`, so that:
+
 * Input must be a `Tensor` of word index pointing to the vocabulary
 * Gradient of the inputs are unavailable (`gradInput` is a dummy variable) during `backward()` by default, since it saves a lot of training time while `gradInput` is not involved. Call the method `should_updateGradInput(flag)` to explicitly enable/disable it if `gradInput` is indeed desired/undesired. See explanations below.
 * Both CPU and GPU are supported, depending on `require'nn'` or `require'cunn'`
 
+Interfaces and tensor size layout are consistent with `nn.TemporalConvolution`.
+
+The terms of `nn.TemporalConvolution` are borrowed here and are aliased as the following:
+```
+  B = batch size
+  M = sequence length = nInputFrame = #words
+  V = inputFrameSize = vocabulary size
+  C = outputFrameSize = #output feature maps = #hidden units = embedding size
+  kW = convolution kernel size = kernel width
+```
 
 ## Prerequisites
 * Torch 7
@@ -29,7 +37,7 @@ After installation, running `require'onehot-temp-conv'` will add to the `nn` nam
 
 ### OneHotTemporalConvolution
 
-Constructor:
+#### Constructor:
 ```lua
 module = nn.OneHotTemporalConvolution(inputFrameSize, outputFrameSize, kW)
 ```
@@ -106,13 +114,13 @@ Example 2 (gpu):
   tf:backward(inputs, gradOutputs)
 ```
 
-Method:
+#### Method:
 ```lua
 OneHotTemporalConvolution:should_updateGradInput(flag)
 ```
 Set if it should do updateGradInput (default to false while class construction). `flag` must be `true` or `false`
 
-Method:
+#### Method:
 ```lua
 OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
 ```
@@ -130,9 +138,48 @@ Then calling the method would in effect do the copying
 this(vocabIdxThis, :, :) = that(vocabIdxThat, :, :)
 ```
 
+#### A note
+on `gradInput` and `updateGradInput()`. When `OneHotTemporalConvolution` is usually used as the first layer, the `gradInput` is usually unnecessary since it does not contribute to parameters updating during training. That's why it's default to dummy. When you do need it, just call `should_updateGradInput(true)`, and `gradInput` will be available after calling `updateGradInput()` or `backward()`. Use it with caution as `gradInput` is usually very large and demands much memory.
+
+Example:
+```Lua
+  require'cunn'
+  require'onehot-temp-conv'
+  
+  B = 1 -- batch size
+  M = 225 -- sequence length (#words)
+  V = 30*1000 -- inputFrameSize (vocabulary size)
+  C = 300 -- outputFrameSize (#output feature maps, or embedding size)
+  kW = 5 -- convolution kernel size (width)
+  
+  -- inputs: the one-hot vector as index in set {1,2,...,V}. size: B, M
+  inputs = torch.LongTensor(B, M):apply(
+    function (e) return math.random(1,V) end
+  ):cuda()
+  
+  -- the 1d conv module
+  tf = nn.OneHotTemporalConvolution(V, C, kW):cuda()
+  
+  -- outputs: the dense tensor. size: B, M-kW+1, C
+  outputs = tf:forward(inputs)
+
+  -- enable backprop for input
+  tf:should_updateGradInput(true)
+
+  -- back prop: the gradients w.r.t. parameters and inputs
+  gradOutputs = outputs:clone():normal()
+  gradInputs = tf:backward(inputs, gradOutputs)
+  
+  -- size should be B x M x V
+  print(gradInputs:size())
+```
+
+#### A note
+on parameters. When you need the kernel weight and its gradient, call `self:parameters()` or `self:getParameters()` - note that `OneHotTemporalConvolution` is derived from the container `nn.Sequential`.
+
 ### OneHotTemporalConvolutionDummyBP
 
-Constructor:
+#### Constructor:
 ```lua
 module = nn.OneHotTemporalConvolutionDummyBP(ohConv)
 ```
@@ -163,6 +210,15 @@ Example:
   params, grad = fetext:getParameters()
   assert(params:numel()==0 and grad:numel()==0)
 ```
+
+### NarrowExt
+An auxiliary class. Extend `nn.Narrow` in that the updateGradInput() can be turned off during bp()
+
+### LookupTableExt
+An auxiliary class. Extend `nn.LookupTable` in that
+
+* can do the updateGradInput(), which is not implemented in `nn.LookupTable`
+* the updateGradInput() can be turned off during backward()
 
 ##Reference
 [1] Rie Johnson and Tong Zhang. Effective use of word order for text categorization with convolutional neural networks. NAACL-HLT 2015. 
