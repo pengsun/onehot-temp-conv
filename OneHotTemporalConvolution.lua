@@ -26,12 +26,12 @@ function OneHotTemporalConvolution:__init(V, C, kW)
     end
     check_arg()
 
-    -- submodules: lookuptable + narrow
-    local ltna = {}
+    -- submodules: narrow + lookuptable
+    local submds = {}
     for i = 1, kW do
         local offset = i
         local length = 1 -- set it as (M - kW + 1) at runtime
-        ltna[i] = nn.Sequential()
+        submds[i] = nn.Sequential()
             -- B, M (,V)
             :add(nn.NarrowNoBP(2,offset,length))
             -- B, M-kW+1 (,V)
@@ -39,10 +39,10 @@ function OneHotTemporalConvolution:__init(V, C, kW)
             -- B, M-kW+1, C
     end
 
-    -- send input to each submodule
+    -- multiplexer: send input to each submodule
     local ct = nn.ConcatTable()
     for i = 1, kW do
-        ct:add(ltna[i])
+        ct:add(submds[i])
     end
 
     -- the container to be returned
@@ -64,7 +64,7 @@ function OneHotTemporalConvolution:updateOutput(input)
     return parent.updateOutput(self, input)
 end
 
---- Okay with default OnehotTemporalConv:backward
+-- Okay with default OnehotTemporalConv:backward, which calls each module's backward()
 
 function OneHotTemporalConvolution:__tostring__()
     local s = string.format('%s(%d -> %d, %d',
@@ -72,6 +72,7 @@ function OneHotTemporalConvolution:__tostring__()
     return s .. ')'
 end
 
+--- additional methods
 function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
     assert(torch.type(convThat) == torch.type(self),
         "arg convThat is an unexpected type " .. type(convThat) .. ", expected " .. type(self)
@@ -82,7 +83,6 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
     -- ref vars of this, that wieghts
     local weightConvThis = self:parameters()
     local weightConvThat = convThat:parameters()
-
 
     -- p = kernel size = region size = #LookupTable
     local function check_kernelsize()
