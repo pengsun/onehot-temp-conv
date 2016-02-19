@@ -211,8 +211,11 @@ Example:
   assert(params:numel()==0 and grad:numel()==0)
 ```
 
-### NarrowExt
-An auxiliary class. Extend `nn.Narrow` in that the updateGradInput() can be turned off during bp()
+### OneHotNarrowExt
+An auxiliary class. Extend `nn.Narrow` in that 
+
+* interpret input as index of one-hot tensor
+* the updateGradInput() can be turned off during bp()
 
 ### LookupTableExt
 An auxiliary class. Extend `nn.LookupTable` in that
