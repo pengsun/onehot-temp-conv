@@ -1,4 +1,4 @@
-## One-Hot Temporal Convolution as Torch's nn module
+# One-Hot Temporal Convolution as Torch's nn module
 
 Implement the sparse (one-hot input) 1-dimensional (temporal) convolution defined in [1, 2]. 
 For NLP task, it applies the convolution over the one-hot word vector directly that the word embedding can be ommited, as shwon in [1, 2].
@@ -9,28 +9,25 @@ Interfaces, terms and tensor size layout are consistent with `nn.TemporalConvolu
 
 The exposed module is essentially a wrapper depending on `nn.LookupTable`, so that:
 * Input must be a `Tensor` of word index pointing to the vocabulary
-* Gradient of the inputs are unavailable
+* Gradient of the inputs are unavailable (`gradInput` is a dummy variable) during `backward()` by default, since it saves a lot of training time while `gradInput` is not involved. Call the method `should_updateGradInput(flag)` to explicitly enable/disable it if `gradInput` is indeed desired/undesired. See explanations below.
 * Both CPU and GPU are supported, depending on `require'nn'` or `require'cunn'`
 
 
-### Prerequisites
+## Prerequisites
 * Torch 7
 
 
-### Installation
+## Installation
 * run command ```git clone https://github.com/pengsun/onehot-temp-conv```
 * cd to the directory, run command ```luarocks make```
 
 Then the lib will ba installed to your torch 7 directory. Delete the git-cloned source directory `onehot-temp-conv` if you like.
 
 
-### Usage
+## Usage
 After installation, running `require'onehot-temp-conv'` will add to the `nn` namespace the following classes:
 
-## NarrowNoBP ##
-Derived from `nn.Narrow`, but it doesn't change `gradInput` during back-propagation. An auxiliary class.
-
-## OneHotTemporalConvolution ##
+### OneHotTemporalConvolution
 
 Constructor:
 ```lua
@@ -111,6 +108,12 @@ Example 2 (gpu):
 
 Method:
 ```lua
+OneHotTemporalConvolution:should_updateGradInput(flag)
+```
+Set if it should do updateGradInput (default to false while class construction). `flag` must be `true` or `false`
+
+Method:
+```lua
 OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, vocabIdxThat)
 ```
 Copy the weight from another `OneHotTemporalConvolution` with the respective vocabulary index. 
@@ -127,16 +130,17 @@ Then calling the method would in effect do the copying
 this(vocabIdxThis, :, :) = that(vocabIdxThat, :, :)
 ```
 
-## OneHotTemporalConvolutionNoBP ##
+### OneHotTemporalConvolutionDummyBP
+
 Constructor:
 ```lua
-module = nn.OneHotTemporalConvolutionNoBP(ohConv)
+module = nn.OneHotTemporalConvolutionDummyBP(ohConv)
 ```
 
 Derived from `nn.Module`.
 Initialize from a (pre-trained) `nn.OneHotTemporalConvolution`.
 Only do forward propagation.
-Back propagation will not affect its parameters.
+Back propagation is dummy in that 1) the parameters are invincible to outer module. 2) both the `gradInput` and `gradParameters` are not updated.
 This module should work as a "feature extractor".
 
 Example:
@@ -160,7 +164,7 @@ Example:
   assert(params:numel()==0 and grad:numel()==0)
 ```
 
-###Reference
+##Reference
 [1] Rie Johnson and Tong Zhang. Effective use of word order for text categorization with convolutional neural networks. NAACL-HLT 2015. 
 
 [2] Rie Johnson and Tong Zhang. Semi-supervised convolutional neural networks for text categorization via region embedding. NIPS 2015.
