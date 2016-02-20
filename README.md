@@ -184,11 +184,11 @@ Example:
 #### A note
 on parameters. When you need the kernel weight and its gradient, call `self:parameters()` or `self:getParameters()` - note that `OneHotTemporalConvolution` is derived from the container `nn.Sequential`.
 
-### OneHotTemporalConvolutionDummyBP
+### OneHotTemporalConvolutionOnlyFP
 
 #### Constructor:
 ```lua
-module = nn.OneHotTemporalConvolutionDummyBP(ohConv)
+module = nn.OneHotTemporalConvolutionOnlyFP(ohConv)
 ```
 
 Derived from `nn.Module`.
@@ -205,7 +205,7 @@ Example:
   V, C, p = 33, 10, 2
   
   ohConv = nn.OneHotTemporalConvolution(V, C, p)
-  fetext = nn.OneHotTemporalConvolutionNoBP(ohConv:float())
+  fetext = nn.OneHotTemporalConvolutionOnlyFP(ohConv:float())
   
   -- fprop
   B, M = 12, 5
