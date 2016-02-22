@@ -184,6 +184,7 @@ Example:
 #### A note
 on parameters. When you need the kernel weight and its gradient, call `self:parameters()` or `self:getParameters()` - note that `OneHotTemporalConvolution` is derived from the container `nn.Sequential`.
 
+
 ### OneHotTemporalConvolutionOnlyFP
 
 #### Constructor:
