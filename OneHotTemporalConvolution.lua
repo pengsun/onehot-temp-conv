@@ -1,4 +1,4 @@
---- One-hot Temporal Convolution
+--- One-hot Temporal Convolution classdef
 -- Tensor size flow:
 -- B, M (,V)
 --     V, C, kW
@@ -8,11 +8,13 @@
 --   M = nInputFrame = sequence length
 --   V = inputFrameSize = vocabulary size
 --   C = outputFrameSize = "embedding" size
+--
+-- TODO: shortcut for internal module getter
 
 require'torch'
 require'nn'
 
--- classdef: One-Hot Temporal Convolution
+-- main methods
 local OneHotTemporalConvolution, parent = torch.class('nn.OneHotTemporalConvolution', 'nn.Sequential')
 
 function OneHotTemporalConvolution:__init(V, C, kW)
@@ -66,7 +68,7 @@ function OneHotTemporalConvolution:updateOutput(input)
     return parent.updateOutput(self, input)
 end
 
--- Okay with default backward(), which calls each module's backward()
+--[[ Okay with default backward(), which calls each module's backward() ]]--
 
 function OneHotTemporalConvolution:__tostring__()
     local s = string.format('%s(%d -> %d, %d',
@@ -128,6 +130,32 @@ function OneHotTemporalConvolution:index_copy_weight(vocabIdxThis, convThat, voc
         weigthThis:indexCopy(1, vocabIdxThis,
             weightThat:type(thisType):index(1, vocabIdxThat)
         )
+    end
+
+end
+
+-- static functions
+function OneHotTemporalConvolution.share_weights(tOhConv, tKerPos)
+    -- e.g.,
+    -- share_weights( {ohconv1, ohconv2}, {1,1} ) -- share kernel at position 1
+    -- share_weights( {ohconv1, ohconv2}, {1,2} ) -- share ohconv1 kernel at position 1 with ohconv2 kernel at postition 2
+    -- share_weights( {ohconv1, ohconv2, ohconv3}, {1,1,1} ) --
+
+    assert(type(tOhConv) == 'table' and type(tKerPos) == 'table')
+    assert(#tOhConv == #tKerPos)
+
+    -- this: the base one
+    local kerPosThis = tKerPos[1]
+    local ohConvThis = tOhConv[1]
+    local lookupThis = ohConvThis:get(1):get(kerPosThis):get(2)
+
+    -- that: the others
+    for i = 2, #tOhConv do
+        local kerPosThat =tKerPos[i]
+        local ohConvThat = tOhConv[i]
+        local lookupThat = ohConvThat:get(1):get(kerPosThat):get(2)
+
+        lookupThat:share(lookupThis, 'weight', 'gradWeight')
     end
 
 end

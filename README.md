@@ -184,6 +184,39 @@ Example:
 #### A note
 on parameters. When you need the kernel weight and its gradient, call `self:parameters()` or `self:getParameters()` - note that `OneHotTemporalConvolution` is derived from the container `nn.Sequential`.
 
+#### Method:
+```lua
+OneHotTemporalConvolution.share_weight(tOhConv1, tOhConv2)
+```
+
+Examples
+```
+  require'onehot-temp-conv'
+  oh1 = nn.OneHotTemporalConvolution(10, 20, 2)
+  oh2 = nn.OneHotTemporalConvolution(10, 20, 3)
+  ct = nn.ConcatTable():add(oh1):add(oh2)
+
+  -- no sharing
+  params = ct:getParameters()
+  print(params:size()) 
+
+  -- share at kern3l position 1
+  nn.OneHotTemporalConvolution.share_weights({oh1,oh2}, {1,1})
+  params = ct:getParameters()
+  print(params:size())
+
+  -- share at kernel position 1, 2
+  nn.OneHotTemporalConvolution.share_weights({oh1,oh2}, {1,1})
+  nn.OneHotTemporalConvolution.share_weights({oh1,oh2}, {2,2})
+  params = ct:getParameters()
+  print(params:size())
+  
+  -- convert to cuda
+  require'cunn'
+  ct:cuda()
+  params = ct:getParameters()
+  print(params:size())
+```
 
 ### OneHotTemporalConvolutionOnlyFP
 
