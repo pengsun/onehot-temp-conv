@@ -55,6 +55,25 @@ function OneHotTemporalConvolution:__init(V, C, kW)
     -- B, M-kW+1, C
 end
 
+function OneHotTemporalConvolution:setPadding(pv)
+    local ms = self:findModules('nn.LookupTableExt')
+    for _, m in ipairs(ms) do
+        m:setPadding(pv)
+    end
+    return self
+end
+
+function OneHotTemporalConvolution:zeroPaddingWeight()
+    local ms = self:findModules('nn.LookupTableExt')
+    for _, m in ipairs(ms) do
+        local paddingInd = m.paddingValue
+        if paddingInd > 0 then
+            m.weight:select(1, paddingInd):fill(0)
+        end
+    end
+    return self
+end
+
 function OneHotTemporalConvolution:updateOutput(input)
     assert(input:dim()==2, "input size must be dim 2: B, M")
 
