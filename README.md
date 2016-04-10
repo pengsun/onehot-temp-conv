@@ -39,7 +39,7 @@ After installation, running `require'onehot-temp-conv'` will add to the `nn` nam
 
 #### Constructor:
 ```lua
-module = nn.OneHotTemporalConvolution(inputFrameSize, outputFrameSize, kW)
+module = nn.OneHotTemporalConvolution(inputFrameSize, outputFrameSize, kW [,opt])
 ```
 
 Applies a 1D convolution over an input sequence composed of `nInputFrame` frames. The `input` tensor in
@@ -59,7 +59,10 @@ The parameters are the following:
   * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
   * `outputFrameSize`: The output frame size the convolution layer will produce.
   * `kW`: The kernel width of the convolution, `kW <= nInputFrame` required.
-See the example below for the NLP alias of these terms. 
+  * `opt`: Options. A lua table with the fields:
+    * `hasBias`: Flag for whether to have bias for the convolution. Default to `false`. 
+
+See also the examples below for the NLP alias of these terms. 
 
 Example 1:
 ```Lua
@@ -77,7 +80,7 @@ Example 1:
   )
   
   -- the 1d conv module
-  tf = nn.OneHotTemporalConvolution(V, C, kW)
+  tf = nn.OneHotTemporalConvolution(V, C, kW, {hasBias = true})
   
   -- outputs: the dense tensor. size: B, M-kW+1, C
   outputs = tf:forward(inputs)
@@ -104,7 +107,7 @@ Example 2 (gpu):
   ):cuda()
   
   -- the 1d conv module
-  tf = nn.OneHotTemporalConvolution(V, C, kW):cuda()
+  tf = nn.OneHotTemporalConvolution(V, C, kW, {hasBias = true}):cuda()
   
   -- outputs: the dense tensor. size: B, M-kW+1, C
   outputs = tf:forward(inputs)
