@@ -17,7 +17,7 @@ require'nn'
 -- main methods
 local OneHotTemporalConvolution, parent = torch.class('nn.OneHotTemporalConvolution', 'nn.Sequential')
 
-function OneHotTemporalConvolution:__init(V, C, kW)
+function OneHotTemporalConvolution:__init(V, C, kW, opt)
     parent.__init(self)
 
     local function check_arg()
@@ -25,6 +25,9 @@ function OneHotTemporalConvolution:__init(V, C, kW)
         self.V = V
         self.C = C
         self.kW = kW
+
+        opt = opt or {}
+        self.hasBias = opt.hasBias or false -- default no Bias
     end
     check_arg()
 
@@ -52,6 +55,10 @@ function OneHotTemporalConvolution:__init(V, C, kW)
     self:add(ct)
     -- {B, M-kW+1, C}, {B, M-kW+1, C}, ...
     self:add(nn.CAddTable())
+    -- B, M-kW+1, C
+    if self.hasBias == true then
+        self:add(nn.TemporalAddBias(C))
+    end
     -- B, M-kW+1, C
 end
 
