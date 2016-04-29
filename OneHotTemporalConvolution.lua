@@ -51,13 +51,14 @@ function OneHotTemporalConvolution:__init(V, C, kW, opt)
     end
 
     -- the container to be returned
+    local inplace = true
     -- B, M (,V)
     self:add(ct)
     -- {B, M-kW+1, C}, {B, M-kW+1, C}, ...
-    self:add(nn.CAddTable())
+    self:add(nn.CAddTable(inplace))
     -- B, M-kW+1, C
     if self.hasBias == true then
-        self:add(nn.TemporalAddBias(C))
+        self:add(nn.TemporalAddBias(C, inplace))
     end
     -- B, M-kW+1, C
 end
