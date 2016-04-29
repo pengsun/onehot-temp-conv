@@ -30,7 +30,7 @@ function TemporalAddBias:updateOutput(input)
     local B, M, C = checkInputSize(input)
 
     if true == self.ip then
-        self.output = input
+        self.output:set(input)
     else
         self.output:resizeAs(input):copy(input)
     end
@@ -41,7 +41,7 @@ end
 
 function TemporalAddBias:updateGradInput(input, gradOutput)
     if true == self.ip then
-        self.gradInput = gradOutput
+        self.gradInput:set(gradOutput)
     else
         self.gradInput:resizeAs(gradOutput):copy(gradOutput)
     end
