@@ -1,5 +1,7 @@
 # One-Hot Temporal Convolution as Torch's nn module
 
+**Disclaimer**: it has benn obsolete! See the new one [here](https://github.com/pengsun/ohnn) 
+
 Implement the sparse (one-hot input) 1-dimensional (temporal) convolution defined in [1, 2]. 
 For NLP task, it applies the convolution over the one-hot word vector directly that the word embedding can be ommited, as shwon in [1, 2].
 Only support the "Narrow Convolution", i.e., the sequence size is reduced after "forward".
